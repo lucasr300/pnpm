@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+
+    <script src="assets/jquery.min.js" type="text/javascript"></script> 
+    <script src="assets/skulpt.min.js" type="text/javascript"></script> 
+    <script src="assets/skulpt-stdlib.js" type="text/javascript"></script> 
+
+    <link rel="stylesheet" type="text/css" href="assets/holo-base-elements.css">
+    <link rel="stylesheet" type="text/css" href="assets/holo-ics-dark-elements.css">
+    <link rel="stylesheet" type="text/css" href="assets/holo-base-widgets.css">
+    <link rel="stylesheet" type="text/css" href="assets/holo-ics-dark-widgets.css">
+    
+</head> 
+
+<body>
+
+<script type="text/javascript"> 
+    // output functions are configurable.  This one just appends some text
+    // to a pre element.
+    instance = {};
+    
+    function outf(text) { 
+        var mypre = document.getElementById("output"); 
+        mypre.innerHTML = mypre.innerHTML + text; 
+    } 
+    function builtinRead(x) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+                throw "File not found: '" + x + "'";
+        return Sk.builtinFiles["files"][x];
+    }
+
+    // Here's everything you need to run a python program in skulpt
+    // grab the code from your textarea
+    // get a reference to your pre element for output
+    // configure the output function
+    // call Sk.importMainWithBody()
+    function runit() { 
+        var prog = document.getElementById("yourcode").value; 
+        var mypre = document.getElementById("output");
+        
+        prog = prog + '\n' + 'render_screen()';
+        
+        mypre.innerHTML = ''; 
+        Sk.pre = "output";
+        Sk.configure({output:outf, read:builtinRead}); 
+
+
+        var myPromise = Sk.misceval.asyncToPromise(function() {
+            var result = Sk.importMainWithBody("<stdin>", false, prog, true);
+            instance = result.$d;
+            return result;
+        });
+
+        myPromise.then(function(mod) {
+            bindEvents();
+        },function(err) {
+            console.log(err.toString());
+        });
+    }
+    
+    function bindEvents() {
+        $.each(instance, function(methodName){
+            var match = methodName.match(/on_(\w*)_in_(\w*)/);
+            if (match) {
+                var eventName = match[1];
+                var elementId = match[2];
+                
+                $(document.getElementById(elementId)).on(eventName, function() { instance[match[0]].tp$call(); });
+            };
+        });
+    }
+</script> 
+
+<h3>Try This:</h3> 
+<form> 
+<textarea id="yourcode" cols="80" rows="10">
+
+def on_click_in_primeiro():
+    print "Voce clicou no primeiro botao"
+
+def render_screen():
+    print "<button id='primeiro'>Primeiro</button>" 
+    print "<button id='segundo'>Segundo</button>" 
+
+
+</textarea><br /> 
+<button type="button" onclick="runit()">Run</button> 
+</form> 
+
+<h3>Output:</h3> 
+<pre id="output" >---</pre> 
+
+</body> 
+
+</html> 
