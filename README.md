@@ -4,7 +4,7 @@ Python na palma da mão
 
 Para rodar, baixe os arquivos deste repositório em uma pás a. Abra um terminal nesta mesma pasta e digite:
 
-python -m SimpleHttpServer
+python -m SimpleHTTPServer
 
 
 Em seguida, abra seu navegador na página http://localhost:8000
